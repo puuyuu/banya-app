@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>摩訶般若波羅蜜多 - 定課拼圖闖關</title>
+    <style>
+        :root {
+            --primary-color: #8c6239;
+            --bg-color: #f7f5f0;
+            --card-bg: #ffffff;
+            --text-color: #4a4a4a;
+        }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(140, 98, 57, 0.1);
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 20px;
+        }
+        .status-board {
+            display: flex;
+            justify-content: space-around;
+            background: #fdfcf7;
+            border: 1px solid #ebd0b9;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status-item .num {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .status-item .label {
+            font-size: 12px;
+            color: #666;
+        }
+        /* 5x5 拼圖區 */
+        .puzzle-container {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .puzzle-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .puzzle-piece {
+            background-color: rgba(40, 30, 20, 0.85); /* 未解鎖時的遮罩顏色 */
+            border: 0.5px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.5s ease;
+        }
+        .puzzle-piece.unlocked {
+            background-color: transparent;
+            border: 0.5px solid rgba(255, 255, 255, 0);
+        }
+        /* 輸入控制區 */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #734f2d;
+        }
+        .hint {
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+            line-height: 1.5;
+        }
+        /* 彈窗功德圓滿 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 80%;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .modal-content h2 {
+            color: #d9a74a;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>摩訶般若波羅蜜多</h1>
+    <div class="subtitle">線上自主定課闖關系統</div>
+
+    <div class="status-board">
+        <div class="status-item">
+            <div class="num" id="current-level">1 / 25</div>
+            <div class="label">目前關卡</div>
+        </div>
+        <div class="status-item">
+            <div class="num" id="current-points">0</div>
+            <div class="label">剩餘點數</div>
+        </div>
+        <div class="status-item">
+            <div class="num" id="puzzle-progress">0 / 25</div>
+            <div class="label">拼圖進度</div>
+        </div>
+    </div>
+
+    <div class="puzzle-container" id="puzzle-bg">
+        <div class="puzzle-grid" id="puzzle-grid">
+            </div>
+    </div>
+
+    <div class="input-group">
+        <input type="number" id="chant-count" placeholder="請輸入今日唸誦次數" min="1">
+        <button onclick="submitCount()">申報進度</button>
+    </div>
+
+    <div class="hint">
+        💡 溫馨提示：每滿 <b>108 次</b> 可獲得 1 點。<br>
+        獲得點數後，系統會自動幫您翻開拼圖！
+    </div>
+</div>
+
+<div class="modal" id="reward-modal">
+    <div class="modal-content">
+        <h2>🎉 功德圓滿 🎉</h2>
+        <p id="modal-text">恭喜完成第 1 關拼圖！</p>
+        <button onclick="closeModal()">進入下一關</button>
+    </div>
+</div>
+
+<script>
+    // 預設 25 關的背景圖片（這裡先用精美的佛教/禪意免費公開圖片當範例，您可以換成自己的網址）
+    const levelImages = [
+        "https://images.unsplash.com/photo-1609137144813-7d9921239ab3?w=500", // 1
+        "https://images.unsplash.com/photo-1542044896530-05d85be9b11a?w=500", // 2
+        "https://images.unsplash.com/photo-1590075865003-e48277faa558?w=500", // 3
+        // ... 後續您可以自由補齊 25 張，若超過陣列長度會自動循環使用第一張
+    ];
+
+    // 初始化或讀取本地進度
+    let gameState = JSON.parse(localStorage.getItem('banya_puzzle_state')) || {
+        level: 1,       // 目前關卡 (1-25)
+        points: 0,      // 剩餘可用點數
+        unlockedPieces: 0 // 當前關卡已解鎖的拼圖數 (0-25)
+    };
+
+    const gridContainer = document.getElementById('puzzle-grid');
+    const bgContainer = document.getElementById('puzzle-bg');
+
+    // 初始化畫面
+    function initGame() {
+        // 設定背景圖
+        const imgIndex = (gameState.level - 1) % levelImages.length;
+        bgContainer.style.backgroundImage = `url('${levelImages[imgIndex]}')`;
+
+        // 更新數據顯示
+        document.getElementById('current-level').innerText = `${gameState.level} / 25`;
+        document.getElementById('current-points').innerText = gameState.points;
+        document.getElementById('puzzle-progress').innerText = `${gameState.unlockedPieces} / 25`;
+
+        // 產生 25 格拼圖遮罩
+        gridContainer.innerHTML = '';
+        for (let i = 0; i < 25; i++) {
+            const piece = document.createElement('div');
+            piece.classList.add('puzzle-piece');
+            // 如果這個格子的索引小於已解鎖數量，就讓他變透明（顯現背景）
+            if (i < gameState.unlockedPieces) {
+                piece.classList.add('unlocked');
+            }
+            gridContainer.appendChild(piece);
+        }
+        
+        // 儲存進度
+        localStorage.setItem('banya_puzzle_state', JSON.stringify(gameState));
+    }
+
+    // 提交唸誦次數
+    function submitCount() {
+        const input = document.getElementById('chant-count');
+        const count = parseInt(input.value);
+
+        if (isNaN(count) || count <= 0) {
+            alert("請輸入正確的念誦次數。");
+            return;
+        }
+
+        // 計算獲得多少點
+        const newPoints = Math.floor(count / 108);
+        
+        if (newPoints === 0) {
+            alert(`目前輸入 ${count} 次，還差 ${108 - count} 次即可集滿 1 點，請繼續精進！`);
+            return;
+        }
+
+        // 增加點數並清空輸入框
+        gameState.points += newPoints;
+        input.value = '';
+        
+        alert(`恭喜！申報成功，共獲得 ${newPoints} 點！系統將為您自動翻開拼圖。`);
+        
+        // 自動執行翻拼圖流程
+        autoApplyPoints();
+    }
+
+    // 自動把剩餘點數拿去開拼圖
+    function autoApplyPoints() {
+        if (gameState.points > 0 && gameState.unlockedPieces < 25) {
+            // 每 0.2 秒翻開一格，做個連續開獎的小特效
+            let interval = setInterval(() => {
+                if (gameState.points > 0 && gameState.unlockedPieces < 25) {
+                    gameState.points--;
+                    gameState.unlockedPieces++;
+                    initGame();
+
+                    // 檢查是否滿 25 點（通關）
+                    if (gameState.unlockedPieces === 25) {
+                        clearInterval(interval);
+                        showLevelComplete();
+                    }
+                } else {
+                    clearInterval(interval);
+                }
+            }, 200);
+        } else {
+            initGame();
+        }
+    }
+
+    // 顯示通關彈窗
+    function showLevelComplete() {
+        document.getElementById('modal-text').innerText = `恭喜您圓滿完成第 ${gameState.level} 關的定課修持！`;
+        document.getElementById('reward-modal').style.display = 'flex';
+    }
+
+    // 關閉彈窗並進入下一關
+    function closeModal() {
+        document.getElementById('reward-modal').style.display = 'none';
+        
+        if (gameState.level < 25) {
+            gameState.level++;
+        } else {
+            alert("太不可思議了！您已圓滿全部 25 關！系統將為您重置從第一關重新大悲共修。");
+            gameState.level = 1;
+        }
+        
+        gameState.unlockedPieces = 0; // 重置拼圖格
+        initGame();
+        
+        // 如果還有剩餘點數，繼續自動開下一關的拼圖
+        if (gameState.points > 0) {
+            setTimeout(autoApplyPoints, 500);
+        }
+    }
+
+    // 網頁載入時立刻執行
+    initGame();
+</script>
+
+</body>
+</html>
