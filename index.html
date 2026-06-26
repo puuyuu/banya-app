@@ -172,8 +172,7 @@
     </div>
 
     <div class="puzzle-container" id="puzzle-bg">
-        <div class="puzzle-grid" id="puzzle-grid">
-            </div>
+        <div class="puzzle-grid" id="puzzle-grid"></div>
     </div>
 
     <div class="input-group">
@@ -196,7 +195,7 @@
 </div>
 
 <script>
-    // 預設 25 關的背景圖片（這裡先用精美的佛教/禪意免費公開圖片當範例，您可以換成自己的網址）
+    // 預設 25 關的背景圖片
     const levelImages = [
         "https://www.ctworld.org.tw/beauty/a002.jpg", // 1
         "https://www.ctworld.org.tw/arts/wallpaper/images/scenery/060-800.jpg", // 2
@@ -222,8 +221,8 @@
         "https://www.ctworld.org.tw/arts/wallpaper/images/scenery/056-800.jpg", // 22
         "https://www.ctworld.org.tw/arts/wallpaper/images/newyear/n2026-E05-1680.jpg", // 23
         "https://www.ctworld.org.tw/arts/wallpaper/images/scenery/108-800.jpg", // 24
-        "https://www.ctworld.org.tw/arts/wallpaper/images/scenery/062-800.jpg", // 25
-           ];
+        "https://www.ctworld.org.tw/arts/wallpaper/images/scenery/062-800.jpg"  // 25
+    ];
 
     // 初始化或讀取本地進度
     let gameState = JSON.parse(localStorage.getItem('banya_puzzle_state')) || {
